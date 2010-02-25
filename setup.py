@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
 from setuptools import setup,find_packages,Extension
+import os.path
 
 setup(
         name='pymatlab',
