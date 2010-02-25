@@ -1,0 +1,16 @@
+HISTORY
+=======
+
+2010-02-25 pymatlab 0.1.0
+
+This first version om pymatlab including lots of potential memory leaks.
+The following features ships with this version:
+
+* running commands in the Matlab command interpretor. 
+
+* Placing double precision matrices with arbitrary dimensions on
+  the MATLAB workspace from numpy arrays.
+
+* Retrive double precision matrices from MATLAB workspace to numpy arrays.
+
+* Place string variables on MATLAB workspace.
