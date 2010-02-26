@@ -1,8 +1,14 @@
+=======
 HISTORY
 =======
 
-2010-02-25 pymatlab 0.1.0
+2010-02-26 pymatlab 0.1.1
+-------------------------
+Added the missing MANIFEST.in file to include the docs/ directory. And some small changes
+in the README.txt to work with restructured text.
 
+2010-02-25 pymatlab 0.1.0
+-------------------------
 This first version om pymatlab including lots of potential memory leaks.
 The following features ships with this version:
 

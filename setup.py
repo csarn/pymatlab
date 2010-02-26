@@ -5,7 +5,7 @@ import os.path
 
 setup(
         name='pymatlab',
-        version='0.1.0',
+        version='0.1.1',
         description = 'A python interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
             open(os.path.join("docs", "HISTORY.txt")).read(),
@@ -24,11 +24,12 @@ setup(
                       ['pymatlab/matlab.c'],
                       libraries=['eng','m','mx'],
                       include_dirs=['/opt/matlab/extern/include'],
-                      library_dirs=['/opt/matlab/bin/glnxa64'],
+                      library_dirs=['/opt/matlab/bin/glnxa64','/opt/matlab/bin/glnx86'],
                       )],
         test_suite='tests',
+        url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
-        author='Joakim Möller',
+        author='Joakim Moller',
         author_email='joakim.moller@chalmers.se',
         install_requires=['setuptools','numpy'],
         #tests_require=['mocker','setuptools'],
