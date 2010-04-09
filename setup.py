@@ -39,7 +39,7 @@ setup(
                       include_dirs=include_dirs,
                       library_dirs=library_dirs,
                       )],
-        test_suite='tests',
+        test_suite='tests.test_matlab.suite',
         url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
         author='Joakim Moller',

@@ -13,52 +13,62 @@ class MatlabTestCase(unittest.TestCase):
     def tearDown(self):
         self.session.close()
 
-    def test_runOK(self):
+    def runOK(self):
         command="A=ones(10);"
         string = self.session.run(command)
         self.assertEqual(string,"")
 
-    def test_runNOK(self):
+    def runNOK(self):
         command="A=oxnes(10);"
         string = self.session.run(command)
         self.assertNotEqual(string,"")
 
-    def test_clear(self):
+    def clear(self):
         command="clear all"
         string = self.session.run(command)
         self.assertEqual(string,"")
 
-    def test_sytaxerror(self):
+    def syntaxerror(self):
         command="""if 1,"""
         self.session.putstring('test',command)
         string = self.session.run('eval(test)')
         self.assertNotEqual(string,"")
 
-    def test_longscript(self):
+    def longscript(self):
         command = """for i=1:10
                         sprintf('aoeu %i',i);
                      end"""
         string = self.session.run(command)
         self.assertEqual(string,"")
 
-    def test_getvalue(self):
+    def getvalue(self):
         self.session.run('A=eye(10)')
         b = eye(10)
         a = self.session.getvalue('A')
         self.assertTrue((a==b).all())
 
-    def test_getvalueX(self):
+    def getvalueX(self):
         self.session.run('A=ones(10,10,10)')
         b = ones((10,10,10))
         a = self.session.getvalue('A')
         self.assertTrue((a==b).all())
 
-    def test_getput(self):
+    def getput(self):
         a = randn(10,5,30)
         self.session.putvalue('A',a)
         b = self.session.getvalue('A')
         self.assertTrue((a==b).all())
 
-if __name__=='__main__':
-    unittest.main()
-
+def suite():
+    tests = [
+            'runOK',
+            'runNOK',
+            'clear',
+            'syntaxerror',
+            'longscript',
+            'getvalue',
+            'getvalueX',
+            'getput',
+            ]
+    return unittest.TestSuite(map(MatlabTestCase,tests))
+            
