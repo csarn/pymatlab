@@ -99,13 +99,14 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
     const char * name;
     PyArrayObject * ndarray,*cont_ndarray;
     mxArray * mxarray;
-    double *tmp;
+    double *mx,*nd;
+    int i,j;
 
     if (!PyArg_ParseTuple(args,"sO",&name,&ndarray))
         return NULL;
-    cont_ndarray = PyArray_FROM_OF(ndarray, NPY_C_CONTIGUOUS | NPY_BEHAVED);
+    cont_ndarray = PyArray_GETCONTIGUOUS(ndarray);
     /*allocating and zero initialise */
-    if (!(mxarray=mxCreateNumericArray((mwSize)PyArray_NDIM(cont_ndarray),
+    if (!(mxarray=mxCreateNumericArray((mwSize)cont_ndarray->nd,
                     (mwSize*)PyArray_DIMS(cont_ndarray),
                     mxDOUBLE_CLASS,
                     mxREAL)))
@@ -113,18 +114,20 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
         PyErr_SetString(PyExc_RuntimeError,"Couldn't create mxarray");
         return NULL;
     }
-    /*deallocating memmory from zero initialisation */
-    tmp = mxGetPr(mxarray);
-    mxFree(tmp);
-    /*Transferring data*/
-    mxSetPr(mxarray,(double*)PyArray_DATA(cont_ndarray));
-    fprintf(stderr,"%s\n","err");
-    fprintf(stdout,"%s\n","out");
+
+    nd=(double*)PyArray_DATA(cont_ndarray);
+    mx=mxGetPr(mxarray);
+    j=PyArray_SIZE(cont_ndarray);
+    for (i=0;i<j;i++)
+        mx[i]=nd[i];
     if ((engPutVariable(self->ep,name,mxarray)!=0))
     {
         PyErr_SetString(PyExc_RuntimeError,"Couldn't place string on workspace");
         return NULL;
     }
+    if (ndarray!=cont_ndarray)
+        Py_DECREF(cont_ndarray);
+    Py_DECREF(ndarray);
     Py_RETURN_NONE;
 }
 

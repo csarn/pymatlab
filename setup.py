@@ -12,14 +12,15 @@ if platform.system() == 'Windows':
                     'C:/Program Files/MATLAB/R2008a/extern/lib/win64/microsoft']
 elif platform.system() == 'Linux':
     libraries = ['eng', 'm', 'mx']
-    include_dirs = ['/opt/matlab/extern/include']
-    library_dirs = ['/opt/matlab/bin/glnxa64','/opt/matlab/bin/glnx86']
+    include_dirs = ['/opt/matlab2010a/extern/include']
+    library_dirs = ['/opt/matlab2010a/bin/glnxa64',
+            '/opt/matlab2010a/bin/glnx86']
 else:
     raise 'Unsupported system %s' % platform.system()
 
 setup(
         name='pymatlab',
-        version='0.1.1',
+        version='0.1.2',
         description = 'A python interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
             open(os.path.join("docs", "HISTORY.txt")).read(),

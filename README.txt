@@ -25,7 +25,7 @@ can find MATLAB's libraries (libmx and libeng) or update /etc/ldconfig. On my
 system with MATLAB installed in /opt/matlab I have put this line in my
 .profile:
 
-export LD_LIBRARY_PATH=/opt/matlab/bin/glnxa64:/opt/matlab/sys/os/glnxa64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/matlab/bin/glnxa64:$LD_LIBRARY_PATH
 
 Using pymatlab
 --------------
