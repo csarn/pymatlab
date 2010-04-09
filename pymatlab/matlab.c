@@ -65,15 +65,16 @@ PyMatlabSessionObject_dealloc(PyMatlabSessionObject *self)
 
 static PyObject * PyMatlabSessionObject_run(PyMatlabSessionObject *self, PyObject *args)
 {
-    const char * stringarg;
+    char * stringarg;
     char * command;
-    const char * resultstring;
+    char * resultstring;
     const mxArray * mxresult;
     int status;
     PyObject * result;
     if (!PyArg_ParseTuple(args,"s",&stringarg))
         return NULL;
-    command = malloc(1500);
+    if (!(command = (char*)malloc(sizeof(char)*1500)))
+        return NULL;
     sprintf(command,function_wrap,stringarg);
     status = engEvalString(self->ep,command);
     if (!(mxresult = engGetVariable(self->ep,"pymatlaberrstring")))
@@ -85,7 +86,7 @@ static PyObject * PyMatlabSessionObject_run(PyMatlabSessionObject *self, PyObjec
         resultstring = mxArrayToString(mxresult);
         if (!(result = PyString_FromString(resultstring)))
             return NULL;
-        free((void*)resultstring);
+        mxFree(resultstring);
     }
     /*make sure 'pymatlaberrstring' is empty or not exist until next call*/
     status = engEvalString(self->ep,"clear pymatlaberrstring");
@@ -98,11 +99,12 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
     const char * name;
     PyArrayObject * ndarray,*cont_ndarray;
     mxArray * mxarray;
-    void *tmp;
+    double *tmp;
 
     if (!PyArg_ParseTuple(args,"sO",&name,&ndarray))
         return NULL;
-    cont_ndarray = PyArray_GETCONTIGUOUS(ndarray);
+    cont_ndarray = PyArray_FROM_OF(ndarray, NPY_C_CONTIGUOUS | NPY_BEHAVED);
+    /*allocating and zero initialise */
     if (!(mxarray=mxCreateNumericArray((mwSize)PyArray_NDIM(cont_ndarray),
                     (mwSize*)PyArray_DIMS(cont_ndarray),
                     mxDOUBLE_CLASS,
@@ -115,7 +117,9 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
     tmp = mxGetPr(mxarray);
     mxFree(tmp);
     /*Transferring data*/
-    mxSetData(mxarray,PyArray_DATA(cont_ndarray));
+    mxSetPr(mxarray,(double*)PyArray_DATA(cont_ndarray));
+    fprintf(stderr,"%s\n","err");
+    fprintf(stdout,"%s\n","out");
     if ((engPutVariable(self->ep,name,mxarray)!=0))
     {
         PyErr_SetString(PyExc_RuntimeError,"Couldn't place string on workspace");
