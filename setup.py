@@ -6,15 +6,15 @@ import platform
 
 if platform.system() == 'Windows':
     libraries = ['libmx', 'libmat', 'libeng']
-    include_dirs = ['C:/Program Files/MATLAB/R2008a/extern/include',
-                    'C:/Python26/Lib/site-packages/numpy/core/include']
-    library_dirs = ['C:/Program Files/MATLAB/R2008a/bin/win64',
-                    'C:/Program Files/MATLAB/R2008a/extern/lib/win64/microsoft']
+#    include_dirs = ['C:/Program Files/MATLAB/R2008a/extern/include',
+#                    'C:/Python26/Lib/site-packages/numpy/core/include']
+#    library_dirs = ['C:/Program Files/MATLAB/R2008a/bin/win64',
+#                    'C:/Program Files/MATLAB/R2008a/extern/lib/win64/microsoft']
 elif platform.system() == 'Linux':
     libraries = ['eng', 'm', 'mx']
-    include_dirs = ['/opt/matlab2010a/extern/include']
-    library_dirs = ['/opt/matlab2010a/bin/glnxa64',
-            '/opt/matlab2010a/bin/glnx86']
+#    include_dirs = ['/opt/matlab2010a/extern/include']
+#    library_dirs = ['/opt/matlab2010a/bin/glnxa64',
+#            '/opt/matlab2010a/bin/glnx86']
 else:
     raise 'Unsupported system %s' % platform.system()
 
@@ -37,8 +37,8 @@ setup(
         ext_modules=[Extension('pymatlab.matlab',
                       ['pymatlab/matlab.c'],
                       libraries=libraries,
-                      include_dirs=include_dirs,
-                      library_dirs=library_dirs,
+ #                     include_dirs=include_dirs,
+ #                     library_dirs=library_dirs,
                       )],
         test_suite='tests.test_matlab.suite',
         url = 'http://pymatlab.sourceforge.net/',
