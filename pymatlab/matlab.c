@@ -104,8 +104,9 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
 
     if (!PyArg_ParseTuple(args,"sO",&name,&ndarray))
         return NULL;
-    cont_ndarray = PyArray_GETCONTIGUOUS(ndarray);
-    /*allocating and zero initialise */
+    cont_ndarray = PyArray_FROM_OF(ndarray,NPY_F_CONTIGUOUS | NPY_ALIGNED | NPY_WRITEABLE);
+    /*
+    allocating and zero initialise */
     if (!(mxarray=mxCreateNumericArray((mwSize)cont_ndarray->nd,
                     (mwSize*)PyArray_DIMS(cont_ndarray),
                     mxDOUBLE_CLASS,
@@ -125,9 +126,11 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
         PyErr_SetString(PyExc_RuntimeError,"Couldn't place string on workspace");
         return NULL;
     }
+    /*
     if (ndarray!=cont_ndarray)
         Py_DECREF(cont_ndarray);
     Py_DECREF(ndarray);
+        */
     Py_RETURN_NONE;
 }
 
@@ -163,7 +166,9 @@ static PyObject * PyMatlabSessionObject_getvalue(PyMatlabSessionObject * self, P
 /*    This is how we could make it own data to avoid memory leak: (set OWN_DATA)
  *    data = malloc(sizeof(double[n*m])); 
     memcpy((void * )data,(void *)mxGetPr(mx),sizeof(double[n*m]));*/
-    if (!(result=PyArray_SimpleNewFromData(mxGetNumberOfDimensions(mx), (npy_intp*) mxGetDimensions(mx), NPY_DOUBLE, mxGetData(mx))))
+    if (!(result=PyArray_New(&PyArray_Type,(int) mxGetNumberOfDimensions(mx), 
+                    (npy_intp*) mxGetDimensions(mx), NPY_DOUBLE, NULL, 
+                    mxGetData(mx), NULL, NPY_F_CONTIGUOUS, NULL)))
         return PyErr_Format(PyExc_AttributeError,"Couldn't convert to PyArray");
     /*
     mxDestroyArray(mx);

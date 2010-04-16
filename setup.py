@@ -39,6 +39,7 @@ setup(
                       libraries=libraries,
  #                     include_dirs=include_dirs,
  #                     library_dirs=library_dirs,
+                      extra_compile_args=['-g',],
                       )],
         test_suite='tests.test_matlab.suite',
         url = 'http://pymatlab.sourceforge.net/',
