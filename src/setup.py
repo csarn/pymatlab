@@ -41,7 +41,7 @@ setup(
  #                     library_dirs=library_dirs,
                       extra_compile_args=['-g',],
                       )],
-        test_suite='tests.test_matlab.suite',
+        test_suite='tests.alltests.suite',
         url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
         author='Joakim Moller',
