@@ -2,8 +2,10 @@ import unittest
 #import mocker
 
 from pymatlab.matlab import MatlabSession
+import numpy
 from numpy import eye,arange,ones
 from numpy.random import randn
+from numpy.ma.testutils import assert_equal
 
 class MatlabTestCase(unittest.TestCase):
 
@@ -59,6 +61,24 @@ class MatlabTestCase(unittest.TestCase):
         b = self.session.getvalue('A')
         self.assertTrue((a==b).all())
 
+    def check_order_mult(self):
+        a = 1.0 * numpy.array([[1, 4], [2, 5], [3, 6]])
+        b = 1.0 * numpy.array([[7, 9, 11, 13], [8, 10, 12, 14]])
+        s = self.session
+        s.putvalue('A', a)
+        s.putvalue('B', b)
+        s.run("C = A*B;")
+        c = s.getvalue('C')
+        assert_equal(c.astype(int), numpy.dot(a, b).astype(int))
+
+    def check_order_vector(self):
+        a = 1.0 * numpy.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
+        s = self.session
+        s.putvalue('A', a)
+        s.run("B = A(1:9);")
+        b = s.getvalue('B')
+        assert_equal(b.astype(int), numpy.array([range(1, 10)]).astype(int))
+
 def suite():
     tests = [
             'runOK',
@@ -69,6 +89,8 @@ def suite():
             'getvalue',
             'getvalueX',
             'getput',
+            'check_order_mult',
+            'check_order_vector',
             ]
     return unittest.TestSuite(map(MatlabTestCase,tests))
-            
+
