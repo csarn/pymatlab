@@ -79,7 +79,7 @@ class MatlabTestCase(unittest.TestCase):
         b = s.getvalue('B')
         assert_equal(b.astype(int), numpy.array([range(1, 10)]).astype(int))
 
-def suite():
+def test_suite():
     tests = [
             'runOK',
             'runNOK',

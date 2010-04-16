@@ -24,7 +24,8 @@ setup(
         description = 'A python interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
             open(os.path.join("docs", "HISTORY.txt")).read(),
-        packages = find_packages(),
+        packages = find_packages('src'),
+        package_dir={'':'src'},
         classifiers=['Development Status :: 3 - Alpha',
                         'Intended Audience :: End Users/Desktop',
                         'Intended Audience :: Developers',
@@ -35,7 +36,7 @@ setup(
                         'Programming Language :: Python',
                           ],
         ext_modules=[Extension('pymatlab.matlab',
-                      ['pymatlab/matlab.c'],
+                      ['src/pymatlab/matlab.c'],
                       libraries=libraries,
  #                     include_dirs=include_dirs,
  #                     library_dirs=library_dirs,
