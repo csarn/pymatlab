@@ -3,9 +3,11 @@ import unittest
 
 from pymatlab.matlab import MatlabSession
 import numpy
-from numpy import eye,arange,ones
+from numpy import eye,arange,ones,array
 from numpy.random import randn
 from numpy.ma.testutils import assert_equal
+#from scipy.io import savemat,loadmat
+from os import remove
 
 class MatlabTestCase(unittest.TestCase):
 
@@ -17,49 +19,47 @@ class MatlabTestCase(unittest.TestCase):
 
     def runOK(self):
         command="A=ones(10);"
-        string = self.session.run(command)
-        self.assertEqual(string,"")
+        self.session.run(command)
 
     def runNOK(self):
         command="A=oxnes(10);"
-        string = self.session.run(command)
-        self.assertNotEqual(string,"")
+        self.assertRaises(RuntimeError,self.session.run,command)
 
     def clear(self):
         command="clear all"
-        string = self.session.run(command)
-        self.assertEqual(string,"")
+        self.session.run(command)
 
     def syntaxerror(self):
         command="""if 1,"""
         self.session.putstring('test',command)
-        string = self.session.run('eval(test)')
-        self.assertNotEqual(string,"")
+        self.assertRaises(RuntimeError,self.session.run,'eval(test)')
 
     def longscript(self):
         command = """for i=1:10
                         sprintf('aoeu %i',i);
                      end"""
-        string = self.session.run(command)
-        self.assertEqual(string,"")
+        self.session.run(command)
 
     def getvalue(self):
-        self.session.run('A=eye(10)')
-        b = eye(10)
-        a = self.session.getvalue('A')
-        self.assertTrue((a==b).all())
-
-    def getvalueX(self):
-        self.session.run('A=ones(10,10,10)')
-        b = ones((10,10,10))
-        a = self.session.getvalue('A')
-        self.assertTrue((a==b).all())
+        a = ones((3,5,7,2))
+        err = self.session.run("b=ones(3,5,7,2)")
+        b = self.session.getvalue('b')
+        assert_equal(a,b)
 
     def getput(self):
-        a = randn(10,5,30)
-        self.session.putvalue('A',a)
-        b = self.session.getvalue('A')
-        self.assertTrue((a==b).all())
+        for type in [
+                # Disbled tests
+                #"<i2",
+                #"<i4",
+                #"i",
+                "f",
+                "d",
+                ]:
+            a = array([[1,2,3],[4,5,6]],dtype=type)
+            self.session.putvalue('A',a)
+            b = self.session.getvalue('A')
+            self.assertEqual(a.dtype,b.dtype)
+            assert_equal(a,b)
 
     def check_order_mult(self):
         a = 1.0 * numpy.array([[1, 4], [2, 5], [3, 6]])
@@ -87,7 +87,6 @@ def test_suite():
             'syntaxerror',
             'longscript',
             'getvalue',
-            'getvalueX',
             'getput',
             'check_order_mult',
             'check_order_vector',

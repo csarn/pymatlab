@@ -26,6 +26,35 @@
 /* This wraps a command call to the MATLAB interpretor */
 const char * function_wrap = "try\n\t%s;\ncatch err\n\tpymatlaberrstring = sprintf('Error: %%s with message: %%s\\n',err.identifier,err.message);\n\tfor i = 1:length(err.stack)\n\t\tpymatlaberrstring = sprintf('%%sError: in fuction %%s in file %%s line %%i\\n',pymatlaberrstring,err.stack(i,1).name,err.stack(i,1).file,err.stack(i,1).line);\n\tend\nend\nif exist('pymatlaberrstring','var')==0\n\tpymatlaberrstring='';\nend";
 
+int mxtonpy[17]={   NPY_USERDEF,
+                    NPY_USERDEF,
+                    NPY_USERDEF,
+                    NPY_BOOL,
+                    NPY_CHAR,
+                    NPY_USERDEF,
+                    NPY_DOUBLE,
+                    NPY_FLOAT,
+                    NPY_SHORT, NPY_USHORT,
+                    NPY_INT, NPY_UINT,
+                    NPY_LONG, NPY_ULONG,
+                    NPY_LONGLONG, NPY_ULONGLONG,
+                    NPY_USERDEF
+};
+mxClassID npytomx[23]={ mxLOGICAL_CLASS,
+                        mxUNKNOWN_CLASS,
+                        mxUNKNOWN_CLASS,
+                        mxINT8_CLASS, mxUINT8_CLASS,
+                        mxINT16_CLASS, mxUINT16_CLASS,
+                        mxINT32_CLASS, mxUINT32_CLASS,
+                        mxINT64_CLASS, mxUINT64_CLASS,
+                        mxSINGLE_CLASS, mxDOUBLE_CLASS, mxUNKNOWN_CLASS,
+                        mxUNKNOWN_CLASS, mxUNKNOWN_CLASS, mxUNKNOWN_CLASS,
+                        mxUNKNOWN_CLASS,
+                        mxCHAR_CLASS, mxCHAR_CLASS,
+                        mxUNKNOWN_CLASS,
+                        mxUNKNOWN_CLASS,
+                        mxCHAR_CLASS,
+};
 typedef struct 
 {
     PyObject_HEAD
@@ -66,32 +95,30 @@ PyMatlabSessionObject_dealloc(PyMatlabSessionObject *self)
 static PyObject * PyMatlabSessionObject_run(PyMatlabSessionObject *self, PyObject *args)
 {
     char * stringarg;
-    char * command;
-    char * resultstring;
-    const mxArray * mxresult;
+    char * command,*errmsg;
     int status;
+    const mxArray * mxresult;
     PyObject * result;
     if (!PyArg_ParseTuple(args,"s",&stringarg))
         return NULL;
-    if (!(command = (char*)malloc(sizeof(char)*1500)))
+    if (!(command = (char*)malloc(sizeof(char)*3000)))
         return NULL;
     sprintf(command,function_wrap,stringarg);
-    status = engEvalString(self->ep,command);
-    if (!(mxresult = engGetVariable(self->ep,"pymatlaberrstring")))
+    if (engEvalString(self->ep,command)!=0)
+        return PyErr_Format(PyExc_RuntimeError,
+                "Was not able to evaluate command: %s",command);
+    if ((mxresult = engGetVariable(self->ep,"pymatlaberrstring"))==NULL)
+        return PyErr_Format(PyExc_RuntimeError,"%s",
+                "can't get internal variable: pymatlaberrstring");
+    if (strcmp( mxArrayToString(mxresult),"")!=0)
     {
-        result = PyString_FromString("");
+        /*make sure 'pymatlaberrstring' is empty or not exist until next call*/
+        status = engEvalString(self->ep,"clear pymatlaberrstring");
+        return PyErr_Format(PyExc_RuntimeError,"Error from Matlab: %s end.",
+                mxArrayToString(mxresult));
     }
-    else
-    {
-        resultstring = mxArrayToString(mxresult);
-        if (!(result = PyString_FromString(resultstring)))
-            return NULL;
-        mxFree(resultstring);
-    }
-    /*make sure 'pymatlaberrstring' is empty or not exist until next call*/
-    status = engEvalString(self->ep,"clear pymatlaberrstring");
-    free((void*)command);
-    return result;
+    /*free((void*)command);*/
+    Py_RETURN_NONE;
 }
 
 static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, PyObject *args)
@@ -109,12 +136,11 @@ static PyObject * PyMatlabSessionObject_putvalue(PyMatlabSessionObject *self, Py
     allocating and zero initialise */
     if (!(mxarray=mxCreateNumericArray((mwSize)cont_ndarray->nd,
                     (mwSize*)PyArray_DIMS(cont_ndarray),
-                    mxDOUBLE_CLASS,
+                    npytomx[PyArray_TYPE(cont_ndarray)],
                     mxREAL)))
-    {
-        PyErr_SetString(PyExc_RuntimeError,"Couldn't create mxarray");
-        return NULL;
-    }
+        return PyErr_Format(PyExc_RuntimeError, 
+            "Couldn't create mxarray: NPYTYPE:%i - mxtype:%i", 
+            PyArray_TYPE(cont_ndarray), npytomx[PyArray_TYPE(cont_ndarray)]);
 
     nd=(double*)PyArray_DATA(cont_ndarray);
     mx=mxGetPr(mxarray);
@@ -167,8 +193,8 @@ static PyObject * PyMatlabSessionObject_getvalue(PyMatlabSessionObject * self, P
  *    data = malloc(sizeof(double[n*m])); 
     memcpy((void * )data,(void *)mxGetPr(mx),sizeof(double[n*m]));*/
     if (!(result=PyArray_New(&PyArray_Type,(int) mxGetNumberOfDimensions(mx), 
-                    (npy_intp*) mxGetDimensions(mx), NPY_DOUBLE, NULL, 
-                    mxGetData(mx), NULL, NPY_F_CONTIGUOUS, NULL)))
+                    (npy_intp*) mxGetDimensions(mx), mxtonpy[mxGetClassID(mx)],
+                    NULL, mxGetData(mx), NULL, NPY_F_CONTIGUOUS, NULL)))
         return PyErr_Format(PyExc_AttributeError,"Couldn't convert to PyArray");
     /*
     mxDestroyArray(mx);
