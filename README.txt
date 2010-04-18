@@ -57,8 +57,8 @@ Requirements
 Limitations
 -----------
 
-The current version lets you transfer float or double precision matrixes of any
-rank. Any other types will probably fail and give unpredictable results.
+The current version lets you transfer double precision matrixes of any rank.
+Any other types will probably fail and give unpredictable results.
 
 
 Using pymatlab

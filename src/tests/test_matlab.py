@@ -52,7 +52,7 @@ class MatlabTestCase(unittest.TestCase):
                 #"<i2",
                 #"<i4",
                 #"i",
-                "f",
+                #"f",
                 "d",
                 ]:
             a = array([[1,2,3],[4,5,6]],dtype=type)
