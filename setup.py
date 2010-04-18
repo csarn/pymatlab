@@ -16,7 +16,7 @@ setup(
         version='0.1.3',
         description = 'A python interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
-            open(os.path.join("docs", "HISTORY.txt")).read(),
+            open(os.path.join("docs", "CHANGELOG.txt")).read(),
         packages = find_packages('src'),
         package_dir={'':'src'},
         classifiers=['Development Status :: 3 - Alpha',
@@ -39,6 +39,6 @@ setup(
         author='Joakim Moller',
         author_email='joakim.moller@chalmers.se',
         install_requires=['setuptools','numpy'],
-        tests_require=['scipy','setuptools'],
+        #tests_require=['setuptools'],
 )
 

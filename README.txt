@@ -13,10 +13,15 @@ in done through MATLAB's engine library.
 Download
 --------
 
-Downloading is possible from `PyPi <http://pypi.python.org>`_ and `SourceForge
-pymatlab files <http://sourceforge.net/projects/pymatlab/files/>`_. Since
-pymatlab is hosted at `SourceForge <http://sourceforge.net>`_ the latest
-development version is avalable from subversion.
+Downloading is possible from PyPi_ and `SourceForge pymatlab files`__. Since
+pymatlab is hosted at SourceForge_ the latest development version is avalable
+from subversion.
+
+.. _PyPi: http://pypi.python.org  
+.. _Files: http://sourceforge.net/projects/pymatlab/files/
+.. _SourceForge: http://sourceforge.net
+
+__ Files_
 
 Installing
 ----------
@@ -119,4 +124,10 @@ Bugs, support and feature requests
 
 All request for support like bugfixing and installation support or feature
 requests are directed to  the `SourceForge tracker for pymatlab
-<http://sourceforge.net/tracker/?group_id=307148>`_.
+<http://sourceforge.net/tracker/?group_id=307148>`_. 
+
+Please  consider to support us in our efforts by `donating to pymatlab`__. Your donations will be used to buy hardware and software licenses to be able to continue to develop this package. 
+
+.. _Donations: http://sourceforge.net/donate/index.php?group_id=307148
+
+__ Donations_
