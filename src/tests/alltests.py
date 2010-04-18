@@ -1,9 +1,9 @@
-import unittest
-from tests import test_matlab, doctests
+import unittest,doctest
+from tests import test_matlab
 
-def suite():
+def test_suite():
     return unittest.TestSuite([
         test_matlab.test_suite(),
-        doctests.test_suite(),
+        doctest.DocFileSuite('../../README.txt'),
         ])
             

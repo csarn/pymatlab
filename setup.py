@@ -33,7 +33,7 @@ setup(
                       libraries=libraries,
                       extra_compile_args=['-g',],
                       )],
-        test_suite='tests.alltests.suite',
+        test_suite='tests.alltests.test_suite',
         url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
         author='Joakim Moller',
