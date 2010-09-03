@@ -3,6 +3,8 @@
 from setuptools import setup,find_packages,Extension
 import os.path
 import platform
+import numpy
+import sys
 
 if platform.system() == 'Windows':
     libraries = ['libmx', 'libmat', 'libeng']
@@ -31,6 +33,8 @@ setup(
         ext_modules=[Extension('pymatlab.matlab',
                       ['src/pymatlab/matlab.c'],
                       libraries=libraries,
+                      include_dirs=[numpy.get_include()],
+                      library_dirs=[sys.exec_prefix + '/lib'],        
                       extra_compile_args=['-g',],
                       )],
         test_suite='tests.alltests.test_suite',

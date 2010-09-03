@@ -17,36 +17,31 @@ class MatlabTestCase(unittest.TestCase):
     def tearDown(self):
         self.session.close()
 
-    def runOK(self):
+    def test_runOK(self):
         command="A=ones(10);"
         self.session.run(command)
 
-    def runNOK(self):
+    def test_runNOK(self):
         command="A=oxnes(10);"
         self.assertRaises(RuntimeError,self.session.run,command)
 
-    def clear(self):
+    def test_clear(self):
         command="clear all"
         self.session.run(command)
 
-    def syntaxerror(self):
-        command="""if 1,"""
-        self.session.putstring('test',command)
-        self.assertRaises(RuntimeError,self.session.run,'eval(test)')
-
-    def longscript(self):
+    def test_longscript(self):
         command = """for i=1:10
                         sprintf('aoeu %i',i);
                      end"""
         self.session.run(command)
 
-    def getvalue(self):
+    def test_getvalue(self):
         a = ones((3,5,7,2))
         err = self.session.run("b=ones(3,5,7,2)")
         b = self.session.getvalue('b')
         assert_equal(a,b)
 
-    def getput(self):
+    def test_getput(self):
         for type in [
                 # Disbled tests
                 #"<i2",
@@ -61,7 +56,7 @@ class MatlabTestCase(unittest.TestCase):
             self.assertEqual(a.dtype,b.dtype)
             assert_equal(a,b)
 
-    def check_order_mult(self):
+    def test_check_order_mult(self):
         a = 1.0 * numpy.array([[1, 4], [2, 5], [3, 6]])
         b = 1.0 * numpy.array([[7, 9, 11, 13], [8, 10, 12, 14]])
         s = self.session
@@ -71,7 +66,7 @@ class MatlabTestCase(unittest.TestCase):
         c = s.getvalue('C')
         assert_equal(c.astype(int), numpy.dot(a, b).astype(int))
 
-    def check_order_vector(self):
+    def test_check_order_vector(self):
         a = 1.0 * numpy.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
         s = self.session
         s.putvalue('A', a)
@@ -79,17 +74,27 @@ class MatlabTestCase(unittest.TestCase):
         b = s.getvalue('B')
         assert_equal(b.astype(int), numpy.array([range(1, 10)]).astype(int))
 
-def test_suite():
-    tests = [
-            'runOK',
-            'runNOK',
-            'clear',
-            'syntaxerror',
-            'longscript',
-            'getvalue',
-            'getput',
-            'check_order_mult',
-            'check_order_vector',
-            ]
-    return unittest.TestSuite(map(MatlabTestCase,tests))
+    def test_closing(self):
 
+        s = MatlabSession("matlab -nojvm -nodisplay")
+        assert s.closed()==False
+        s.close()
+        assert s.closed()
+        self.assertRaises(RuntimeError,s.run,'x=1')
+        self.assertRaises(RuntimeError,s.putvalue,'x',1)
+        self.assertRaises(RuntimeError,s.getvalue,'x')
+
+
+
+def test_suite():
+
+    suite = unittest.makeSuite(MatlabTestCase,'test')
+    return suite
+
+
+
+if __name__ == "__main__":
+
+    # unittest.main()
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(test_suite())
