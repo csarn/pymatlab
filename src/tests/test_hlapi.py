@@ -51,6 +51,23 @@ class MatlabHLAPITestCase(unittest.TestCase):
         x = rand(numpy.array([[10, 1.]]))
         assert x.shape == (10,1)
 
+    def test_funcwrap_null(self):
+        """ tests if functions returning null in MATLAB
+        also do so in Python """
+
+        s = self.session
+        a = s.clear('ans')
+        assert a==None
+
+    def test_funcwrap_figure_retval(self):
+        """ tests if figure functions return values are ok"""
+
+        s = self.session
+        a = s.figure()
+        assert a==s.gcf()
+        # this is the matlab function "close", not the session._close()!
+        s.close()
+
 
     def test_append_path(self):
         s = self.session

@@ -848,8 +848,9 @@ static PyObject * PyMatlabSessionObject_close(PyMatlabSessionObject * self, PyOb
     //printf("Closing MATLAB session.\n");
     engClose(self->ep);
     self->ep=NULL;
-    Py_RETURN_NONE;
   }
+  Py_RETURN_NONE;
+
 }
 
 static PyObject * PyMatlabSessionObject_closed(PyMatlabSessionObject * self, PyObject *args)

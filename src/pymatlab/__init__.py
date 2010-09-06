@@ -4,11 +4,12 @@ import numpy
 from pymatlab.matlab import MatlabSession as _MatlabSession
 
 
+
 def valid_matlab_symbol(name):
     """ some basic tests (no complete) to check if symbol name
     is valid in MATLAB"""
 
-    invalid_chars = """'"()[] """
+    invalid_chars = """()""'[] """
     invalid_prefixes = '_()[]'
     
     if name[0] in invalid_prefixes:
@@ -72,6 +73,11 @@ class FuncWrap(object):
 
     """
 
+    # These are matlab functions that
+    # return a value but only if
+    # one explicitly calls them as
+    # ans = func(args)
+    explicit_ans = ['figure','close']
 
     def __init__(self,session,func_name,converters=None):
         """constructs a proxy to a matlab function.
@@ -108,9 +114,27 @@ class FuncWrap(object):
                 self.session.put(symbol,x)
                 arg_list.append(symbol)
                 arg_count+=1
-        self.session.run(self.func_name+"(%s)" % ", ".join(arg_list))
-        r = self.session.get("ans",converters = self.converters)
-        return r
+        # set ans to 'NoneNULLvoid'
+        self.session.putvalue("ans","NoneNULLvoid")        
+        # Some functions do not implicitly set return
+        # value in ans, so let's explicitly do it.
+        if self.func_name in self.explicit_ans:
+            self.session.run("ans = "+self.func_name+"(%s)" % ", ".join(arg_list))
+        else:
+            self.session.run(self.func_name+"(%s)" % ", ".join(arg_list))
+            
+
+        # did ans get cleared? Yes, then return None
+        if self.session.isvar("ans"):
+            r = self.session.get("ans",converters = self.converters)
+        else:
+            return None
+
+        # Did ans get written to?  No, then return None
+        if  r == 'NoneNULLvoid':
+            return None
+        else:
+            return r
 
 def csc_matrix_converter(sp_matrix):
     """ Takes the (pr,ir,jc,shape) repr of a sparse matrix 
@@ -141,23 +165,40 @@ def csc_matrix_converter(sp_matrix):
         
 
 
-class Session(_MatlabSession):
+class Session(object):
 
     # converters are the user overridable default converters 
     # for self.func_wrap
-    non_parameter_attributes = ['converters']
+    non_parameter_attributes = ['converters','_session']
     converters = []
 
     def __init__(self,matlab_cmd=None,*args,**kwargs):
         if matlab_cmd==None:
             matlab_cmd = "matlab -nosplash -nodesktop"
-        _MatlabSession.__init__(self,matlab_cmd,*args,**kwargs)
+        self._session = _MatlabSession(matlab_cmd,*args,**kwargs)
 
     def __del__(self):
-        if not self.closed():
+        if not self._closed():
             print "Closing MATLAB session."
-            self.close()
+            self._close()
 
+
+    def run(self,expr):
+        self._session.run(expr)
+
+    def getvalue(self,expr):
+        return self._session.getvalue(expr)
+
+    def putvalue(self,expr,val):
+        self._session.putvalue(expr,val)
+
+    def _close(self):
+        """ Close the MATLAB session. """
+        self._session.close()
+
+    def _closed(self):
+        """ Check if the MATLAB session is closed."""
+        return self._session.closed()
 
     def eval(self,expr):
 
@@ -305,7 +346,8 @@ MATLAB docs:
         """ returns true if name is a defined function or
         function handle in MATLAB world."""
 
-        path = self.eval("ans=which('%s')" % name)
+        self.run("py_ans=which('%s')" % name)
+        path = self.get("py_ans")
         if path=='variable':
             return self.isa(name, 'function_handle')
         else:
@@ -314,7 +356,8 @@ MATLAB docs:
     def isvar(self,name):
         """ returns true if name is a defined variable the in MATLAB world."""
 
-        path = self.eval("ans=which('%s')" % name)
+        self.run("py_ans=which('%s')" % name)
+        path = self.get("py_ans")
         if path=='variable':
             return True
         else:

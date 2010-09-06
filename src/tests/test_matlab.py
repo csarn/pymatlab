@@ -78,6 +78,10 @@ class MatlabTestCase(unittest.TestCase):
 
         s = MatlabSession("matlab -nojvm -nodisplay")
         assert s.closed()==False
+        # check that we can call s.close more that once
+        # and it is gracefull
+        s.close()
+        s.close()
         s.close()
         assert s.closed()
         self.assertRaises(RuntimeError,s.run,'x=1')
