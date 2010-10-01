@@ -23,6 +23,13 @@ class MatlabHLAPITestCase(unittest.TestCase):
     #def tearDownClass(cls):
     #    cls.session.close()
 
+    def test_todo_fails1(self):
+        """ TODO/TOFIX: This test fails, but it should not """
+        s = self.session
+        b = numpy.arange(11.0)[::-1]
+        s.b = b
+        assert numpy.alltrue(s.b == b)
+
 
     def test_eval(self):
         s = self.session
