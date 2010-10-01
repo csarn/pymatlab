@@ -41,6 +41,9 @@ libraries (libmx and libeng). On my system with MATLAB installed in
 
     export LD_LIBRARY_PATH=/opt/matlab/bin/glnxa64:$LD_LIBRARY_PATH
 
+However, this is not necessary if you configure the rpath setting correctly 
+in the setup.cfg at build time.
+
 On Windows make sure the Matlab DLLs are in your "Path" environment variable. 
 
 Requirements
@@ -66,58 +69,99 @@ Using pymatlab
 
 First import:
 
->>> from pymatlab.matlab import MatlabSession
+>>> from pymatlab import Session
     
-Initialise the interpretor, an optional argument is a string to launch matlab:
 
->>> session = MatlabSession()
->>> session.close()
+Start a Session, an optional argument is the path the the matlab
+executable, if it is not your PATH.
 
-Now with optional parameters:
+>>> m = Session("/optional/path/to/matlab -options")
 
->>> session = MatlabSession('matlab -nojvm -nodisplay')
+Here matlab "-options" default to "-nosplash -nodesktop" which allows MATLAB
+GUI windows to open and be interactive!
 
-Create an numpy-array to start the work.
+((
+Trouble-shooting Note: If you get a "Can't start MATLAB engine"
+here, and you are running a Linux based system, please be sure that
+"csh" is install and in /bin/csh, i.e. on Ubuntu:
 
->>> from numpy.random import randn
->>> a = randn(20,10,30)
+$ sudo apt-get install csh
+# or have you sysadmin install csh
+$ which csh
+/bin/csh
+))
 
-Send the numpy array a to the MATLAB Workspace to the variable 'A'
-  
->>> session.putvalue('A',a)
+Now try it out ... the Session instance exposes the matlab namespace, so
+we can call the matlab "plot" function:
 
-Do something in matlab in MATLAB with variable A. Sucessfull commands return
-an empty string - if MATLAB generates an error the returning string holds the
-error message
+>>> import numpy
+>>> a = numpy.arange(0,10,0.1)
+>>> m.plot(a,a**2,'r--')
+>>> m.close()
+>>> print m.help('plot')  # will print MATLAB docs on plot
+
+If you are in ipython
+$ ipython -pylab
+
+On can get help directly on objects in the MATLAB namespace
+In []: m.plot ?
+Type:             FuncWrap
+Base Class:       <class 'pymatlab.FuncWrap'>
+String Form:   <pymatlab.FuncWrap object at 0x2ed8190>
+Namespace:        Interactive
+File:             /usr/local/lib/python2.6/dist-packages/pymatlab-0.1.3-py2.6-linux-x86_64.egg/pymatlab/__init__.py
+Docstring:
+    PLOT   Linear plot.                                                                                                     
+    PLOT(X,Y) plots vector Y versus vector X. If X or Y is a matrix,
+    then the vector is plotted versus the rows or columns of the matrix,
+    whichever line up.  If X is a scalar and Y is a vector, disconnected
+    line objects are created and plotted as discrete points vertically at
+    X.
+ 
+...
+
+Strings of matlab code can be sent to the Session with the run method:
+
+>>> m.run("a = 0:10")
+>>> print m.a
+[[  0.   1.   2.   3.   4.   5.   6.   7.   8.   9.  10.]]
+>>> m.b = numpy.array([range(11.0)[::-1]],dtype=float)
+>>> m.run("c = a+b")
+>>> print m.c
+[[ 10.  10.  10.  10.  10.  10.  10.  10.  10.  10.  10.]]
+
+Sucessfull m.run commands return an empty string - if MATLAB 
+generates an error then a RuntimeError is raised with the 
+MATLAB error message 
     
->>> session.run('B=2*A')
+>>> m.run('B=2*A')
 
->>> session.run('C')
-Traceback (most recent call last):
     ...
-RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'C'.
+RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'A'.
  end.
 
 A trick to make larger scripts more failsafe with regards to syntax errors.
 Send a script to a string variable and run it with eval().
 
->>> mscript = """D = A
+>>> m.code = """D = a
 ... for i=1:10
 ...    D = 2*D
 ... end
 ... """
->>> session.putstring('MSCRIPT',mscript)
->>> session.run('eval(MSCRIPT)')
+>>> m.run('eval(code)')
 
 To retrive the variable back to python:
 
->>> b = session.getvalue('B')
->>> (2*a==b).all()
+>>> print m.D
+>>> (m.D==m.A*(2**10)).all()
 True
 
-Don't forget to close MATLAB.
+The MATLAB session is closed automatically on garbage collection of
+the m instance.
 
->>> session.close()
+>>> quit()
+Closing MATLAB session.
+
 
 Bugs, support and feature requests
 ----------------------------------

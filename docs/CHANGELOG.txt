@@ -2,6 +2,24 @@
 HISTORY
 =======
 
+2010-09-06 09:54:13 UTC by markovg
+
+Summarizing r24-r26 in trunk:
+
+- Support for many new data types, like sparse matrices, struct and cell
+arrays, booleans, etc.
+
+- The user now sees a high-level API of the MATLAB session which exposes
+the matlab name space, and allows functions to be called as if one was
+in matlab (argument translation is implicit & automagic).  MATLAB
+functions expose their MATLAB help in ipython with standard help mechanisms.
+
+In []: m.plot ? 
+
+- Added "rpath" to unix setup.cfg example, so that no LD_LIBRARY_PATH
+  declaration is necessary.
+
+
 2010-04-18? pymatlab 0.1.3
 --------------------------
 
