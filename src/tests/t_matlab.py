@@ -1,29 +1,26 @@
 import unittest
 #import mocker
 
-from pymatlab.matlab import MatlabSession
+import matlab
 import numpy
 from numpy import eye,arange,ones,array
 from numpy.random import randn
 from numpy.ma.testutils import assert_equal
 #from scipy.io import savemat,loadmat
-from os import remove
 
 class MatlabTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = MatlabSession("matlab -nojvm -nodisplay")
-
-    def tearDown(self):
-        self.session.close()
-
+        self.session = matlab.Matlab("matlab -nojvm -nodisplay")
+        
     def runOK(self):
         command="A=ones(10);"
         self.session.run(command)
 
     def runNOK(self):
-        command="A=oxnes(10);"
-        self.assertRaises(RuntimeError,self.session.run,command)
+        command="A=oxes(10);"
+        self.session.run(command)
+        self.assertEqual('tomte',self.session.buf.value)
 
     def clear(self):
         command="clear all"
@@ -41,8 +38,8 @@ class MatlabTestCase(unittest.TestCase):
         self.session.run(command)
 
     def getvalue(self):
-        a = ones((3,5,7,2))
-        err = self.session.run("b=ones(3,5,7,2)")
+        a = ones((5,3,7,4),dtype='double')
+        err = self.session.run("b=ones(5,3,7,4)")
         b = self.session.getvalue('b')
         assert_equal(a,b)
 
@@ -81,15 +78,15 @@ class MatlabTestCase(unittest.TestCase):
 
 def test_suite():
     tests = [
-            'runOK',
-            'runNOK',
-            'clear',
-            'syntaxerror',
-            'longscript',
+#            'runOK',
+#            'runNOK',
+#            'clear',
+#            'syntaxerror',
+#            'longscript',
             'getvalue',
-            'getput',
-            'check_order_mult',
-            'check_order_vector',
+#            'getput',
+#            'check_order_mult',
+#            'check_order_vector',
             ]
     return unittest.TestSuite(map(MatlabTestCase,tests))
 
