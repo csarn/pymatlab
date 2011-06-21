@@ -1,22 +1,13 @@
 #!/usr/bin/python
 # vim: set fileencoding=utf-8 :
-from setuptools import setup,find_packages,Extension
-import os.path
-import platform
-
-if platform.system() == 'Windows':
-    libraries = ['libmx', 'libmat', 'libeng']
-elif platform.system() == 'Linux':
-    libraries = ['eng', 'm', 'mx']
-else:
-    raise 'Unsupported system %s' % platform.system()
-
+from setuptools import setup,find_packages
+from os.path import join
 setup(
         name='pymatlab',
-        version='0.1.3',
-        description = 'A python interface to MATLAB',
+        version='0.2.0',
+        description = 'A pythonic interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
-            open(os.path.join("docs", "CHANGELOG.txt")).read(),
+            open(join("docs", "CHANGELOG.txt")).read(),
         packages = find_packages('src'),
         package_dir={'':'src'},
         classifiers=['Development Status :: 3 - Alpha',
@@ -28,11 +19,6 @@ setup(
                         'Programming Language :: C',
                         'Programming Language :: Python',
                           ],
-        ext_modules=[Extension('pymatlab.matlab',
-                      ['src/pymatlab/matlab.c'],
-                      libraries=libraries,
-                      extra_compile_args=['-g',],
-                      )],
         test_suite='tests.alltests.test_suite',
         url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
