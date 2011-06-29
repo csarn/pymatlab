@@ -1,11 +1,13 @@
 import unittest
 #import mocker
 
+import sys
 import matlab
 import numpy
 from numpy import eye,arange,ones,array
 from numpy.random import randn
 from numpy.ma.testutils import assert_equal
+from StringIO import StringIO
 #from scipy.io import savemat,loadmat
 
 class MatlabTestCase(unittest.TestCase):
@@ -43,6 +45,12 @@ class MatlabTestCase(unittest.TestCase):
         b = self.session.getvalue('b')
         assert_equal(a,b)
 
+    def putvalue(self):
+        a = randn(2,3)
+        self.session.putvalue('a',a)
+        self.session.run('a')
+        self.assertEqual('test',self.session.buf.value)
+
     def getput(self):
         for type in [
                 # Disbled tests
@@ -78,15 +86,16 @@ class MatlabTestCase(unittest.TestCase):
 
 def test_suite():
     tests = [
-#            'runOK',
-#            'runNOK',
-#            'clear',
-#            'syntaxerror',
-#            'longscript',
+            'runOK',
+            'runNOK',
+            'clear',
+            'syntaxerror',
+            'longscript',
             'getvalue',
-#            'getput',
-#            'check_order_mult',
-#            'check_order_vector',
+            'putvalue',
+            'getput',
+            'check_order_mult',
+            'check_order_vector',
             ]
     return unittest.TestSuite(map(MatlabTestCase,tests))
 
