@@ -70,8 +70,7 @@ First import:
     
 Initialise the interpretor, an optional argument is a string to launch matlab:
 
->>> session = MatlabSession()
->>> session.close()
+>>> session = MatlabSession('')
 
 Now with optional parameters:
 
@@ -96,7 +95,7 @@ error message
 Traceback (most recent call last):
     ...
 RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'C'.
- end.
+<BLANKLINE>
 
 A trick to make larger scripts more failsafe with regards to syntax errors.
 Send a script to a string variable and run it with eval().
@@ -106,7 +105,7 @@ Send a script to a string variable and run it with eval().
 ...    D = 2*D
 ... end
 ... """
->>> session.putstring('MSCRIPT',mscript)
+>>> session.putvalue('MSCRIPT',mscript)
 >>> session.run('eval(MSCRIPT)')
 
 To retrive the variable back to python:
@@ -114,10 +113,6 @@ To retrive the variable back to python:
 >>> b = session.getvalue('B')
 >>> (2*a==b).all()
 True
-
-Don't forget to close MATLAB.
-
->>> session.close()
 
 Bugs, support and feature requests
 ----------------------------------

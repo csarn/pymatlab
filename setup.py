@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# vim: set fileencoding=utf-8 :
 from setuptools import setup,find_packages
 from os.path import join
 setup(
@@ -16,14 +15,13 @@ setup(
                         'Intended Audience :: Science/Research',
                         'License :: OSI Approved :: GNU General Public License (GPL)',
                         'Operating System :: POSIX',
-                        'Programming Language :: C',
                         'Programming Language :: Python',
                           ],
-        test_suite='tests.alltests.test_suite',
+        test_suite='tests.test_all.test_suite',
         url = 'http://pymatlab.sourceforge.net/',
         zip_safe=False,
-        author='Joakim Moller',
-        author_email='joakim.moller@chalmers.se',
+        author='Joakim M&ouml;ller',
+        author_email='joakim.moller@molflow.com',
         install_requires=['setuptools','numpy'],
         #tests_require=['setuptools'],
 )

@@ -1,0 +1,10 @@
+*.pyc
+bin
+build
+.installed.cfg
+develop-eggs
+eggs
+include
+lib
+src/pymatlab.egg-info
+

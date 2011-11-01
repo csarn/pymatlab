@@ -2,18 +2,18 @@ import unittest
 #import mocker
 
 import sys
-import matlab
+from pymatlab.matlab import MatlabSession
 import numpy
-from numpy import eye,arange,ones,array
+from numpy import eye,arange,ones,array,ndarray
 from numpy.random import randn
-from numpy.ma.testutils import assert_equal
+from numpy.ma.testutils import assert_equal,assert_almost_equal
 from StringIO import StringIO
 #from scipy.io import savemat,loadmat
 
 class MatlabTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = matlab.Matlab("matlab -nojvm -nodisplay")
+        self.session = MatlabSession("matlab -nojvm -nodisplay")
         
     def runOK(self):
         command="A=ones(10);"
@@ -21,8 +21,7 @@ class MatlabTestCase(unittest.TestCase):
 
     def runNOK(self):
         command="A=oxes(10);"
-        self.session.run(command)
-        self.assertEqual('tomte',self.session.buf.value)
+        self.assertRaises(RuntimeError,self.session.run,command)
 
     def clear(self):
         command="clear all"
@@ -30,7 +29,7 @@ class MatlabTestCase(unittest.TestCase):
 
     def syntaxerror(self):
         command="""if 1,"""
-        self.session.putstring('test',command)
+        self.session.putvalue('test',command)
         self.assertRaises(RuntimeError,self.session.run,'eval(test)')
 
     def longscript(self):
@@ -49,7 +48,12 @@ class MatlabTestCase(unittest.TestCase):
         a = randn(2,3)
         self.session.putvalue('a',a)
         self.session.run('a')
-        self.assertEqual('test',self.session.buf.value)
+        buf = self.session.buf.value
+        vector = buf.split()
+        data = [float(i) for i in vector[-6:]]
+        buf=array(data)
+        buf.shape=(2,3)
+        assert_almost_equal(a,buf,4)
 
     def getput(self):
         for type in [
@@ -85,6 +89,7 @@ class MatlabTestCase(unittest.TestCase):
         assert_equal(b.astype(int), numpy.array([range(1, 10)]).astype(int))
 
 def test_suite():
+    # Want to run them in a certain order...
     tests = [
             'runOK',
             'runNOK',
