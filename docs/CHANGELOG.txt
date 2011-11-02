@@ -2,7 +2,13 @@
 HISTORY
 =======
 
-2010-04-18? pymatlab 0.1.3
+2011-11-01 pymatlab 0.2.0
+-------------------------
+
+A ctypes implementation. This makes it easier to run and install because of no
+need for compilation.
+
+2010-04-18 pymatlab 0.1.3
 --------------------------
 
 Run now throws exception RuntimeError on erros. A critical bug was fixed

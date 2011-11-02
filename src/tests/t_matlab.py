@@ -13,7 +13,7 @@ from StringIO import StringIO
 class MatlabTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = MatlabSession("matlab -nojvm -nodisplay")
+        self.session = MatlabSession(command="matlab -nojvm -nodisplay")
         
     def runOK(self):
         command="A=ones(10);"
@@ -58,10 +58,11 @@ class MatlabTestCase(unittest.TestCase):
     def getput(self):
         for type in [
                 # Disbled tests
-                #"<i2",
-                #"<i4",
-                #"i",
-                #"f",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+                "f",
                 "d",
                 ]:
             a = array([[1,2,3],[4,5,6]],dtype=type)
@@ -69,6 +70,15 @@ class MatlabTestCase(unittest.TestCase):
             b = self.session.getvalue('A')
             self.assertEqual(a.dtype,b.dtype)
             assert_equal(a,b)
+
+    def getput_string(self):
+        a = "test string\n test again"
+        self.session.putvalue('A',a)
+        self.session.run('display(A)')
+        buf = self.session.buf.value
+        b = self.session.getvalue('A')
+        self.assertEqual(buf.split()[5:],a.split())
+        self.assertEqual(a,b)
 
     def check_order_mult(self):
         a = 1.0 * numpy.array([[1, 4], [2, 5], [3, 6]])
@@ -99,6 +109,7 @@ def test_suite():
             'getvalue',
             'putvalue',
             'getput',
+            'getput_string',
             'check_order_mult',
             'check_order_vector',
             ]
