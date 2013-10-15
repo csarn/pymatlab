@@ -3,7 +3,7 @@ from setuptools import setup,find_packages
 from os.path import join
 setup(
         name='pymatlab',
-        version='0.2.0',
+        version='0.2.1',
         description = 'A pythonic interface to MATLAB',
         long_description=open("README.txt").read() + "\n" + 
             open(join("docs", "CHANGELOG.txt")).read(),
@@ -19,7 +19,6 @@ setup(
                           ],
         test_suite='tests.test_all.test_suite',
         url = 'http://pymatlab.sourceforge.net/',
-        zip_safe=False,
         author='Joakim M&ouml;ller',
         author_email='joakim.moller@molflow.com',
         install_requires=['setuptools','numpy'],

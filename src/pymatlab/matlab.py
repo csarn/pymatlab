@@ -1,10 +1,51 @@
 from ctypes import *
 from numpy import array,ndarray,dtype
 from os.path import join
+import platform
 import sys,numpy
 
 class mxArray(Structure):
     pass
+
+def numpy_to_ctype(np_variable):
+    dtype = str(np_variable.dtype)
+    ctype = c_double
+    if "int" in dtype:
+        if '8' in dtype:
+            ctype = c_short
+        elif '16' in dtype:
+            ctype = c_short
+        elif '32' in dtype:
+            ctype = c_int
+        elif '64' in dtype:
+            ctype = c_long
+    elif "float" in dtype:
+        if '32' in dtype:
+            ctype = c_float
+        elif '64' in dtype:
+            ctype = c_double
+        else:
+            ctype = c_double
+    return ctype
+
+def mat_to_ctype(classname):
+    dtype = classname
+    ctype = c_double
+    if "int" in dtype:
+        if '8' in dtype:
+            ctype = c_short
+        elif '16' in dtype:
+            ctype = c_short
+        elif '32' in dtype:
+            ctype = c_int
+        elif '64' in dtype:
+            ctype = c_long
+    elif "single" in dtype:
+        ctype = c_float
+    elif "double" in dtype:
+        ctype = c_double
+    return ctype
+
 
 def np_to_mat(np_variable):
     
@@ -84,13 +125,26 @@ if exist('pymatlaberrstring','var')==0
 end
 '''
 class MatlabSession(object):
-    def __init__(self,path='/opt/matlab',command='',bufsize=8):
-        self.engine = CDLL(join(path,'bin/glnxa64/libeng.so'))
-        self.mx     = CDLL(join(path,'bin/glnxa64/libmx.so'))
-        self.ep = self.engine.engOpen(c_char_p(command))
-        buff_length = bufsize*1024
-        self.buf = create_string_buffer(buff_length)
-        self.engine.engOutputBuffer(self.ep,self.buf,buff_length-1)
+    def __init__(self,matlab_root='',command='',bufsize=128):
+        system = platform.system()
+        if system=='Linux' or system=='Darwin':
+            self.engine = CDLL(join(matlab_root,'bin','glnxa64','libeng.so'))
+            self.mx = CDLL(join(matlab_root,'bin','glnxa64','libmx.so'))
+            self.ep = self.engine.engOpen(c_char_p(command))
+        elif system=='Windows':
+            self.engine = CDLL(join(matlab_root,'bin','glnxa64','libeng.dll'))
+            self.mx = CDLL(join(matlab_root,'bin','glnxa64','libmx.dll'))
+            self.ep = self.engine.engOpen(None)
+        else:
+            raise NotSupportedException(
+                    'system {} not yet supported'.format(system))
+        if self.ep is None:
+            raise RuntimeError(
+                  'Could not start matlab using command "{}"'.format(command))
+        self.buff_length = bufsize
+        if self.buff_length!=0:
+	    self.buf = create_string_buffer(self.buff_length)
+            self.engine.engOutputBuffer(self.ep,self.buf,self.buff_length-1)
 
     def __del__(self):
         self.engine.engClose(self.ep)
@@ -115,9 +169,10 @@ class MatlabSession(object):
         ndims = self.mx.mxGetNumberOfDimensions(mx)
         self.mx.mxGetDimensions.restype=POINTER(c_size_t)
         dims = self.mx.mxGetDimensions(mx)
-        numelems = 1
-        for i in range(ndims):
-            numelems = numelems*dims[i]
+        self.mx.mxGetNumberOfElements.restype=c_size_t
+        numelems = self.mx.mxGetNumberOfElements(mx)
+        self.mx.mxGetElementSize.restype=c_size_t
+        elem_size = self.mx.mxGetElementSize(mx)
         self.mx.mxGetClassName.restype=c_char_p
         class_name = self.mx.mxGetClassName(mx)
         if class_name=='char':
@@ -126,14 +181,15 @@ class MatlabSession(object):
             self.mx.mxGetString(mx, return_str, length-1);
             return return_str.value
         else:
-            returntype = c_double
+            returntype = mat_to_ctype(class_name)
+            returnsize = numelems*elem_size
             self.mx.mxGetData.restype=POINTER(returntype)
             data =self.mx.mxGetData(mx)
-            data_array=array( data[:numelems])
-            #pyarray = ndarray(dims[:ndims],'float64',data,order='F')
-            #return array(range(10,20))
-            return ndarray(buffer=data_array,shape=dims[:ndims],
-                    dtype=dtype(class_name),order='F')
+            buf =create_string_buffer(returnsize)
+            memmove(buf,data,returnsize)
+            pyarray = ndarray(buffer=buf,shape=dims[:ndims], 
+                    dtype=dtype(returntype),order='F')
+            return pyarray.squeeze()
 
     def putvalue(self,name,pyvariable):
         if type(pyvariable)==str:
@@ -148,12 +204,12 @@ class MatlabSession(object):
                     dim,
                     np_to_mat(pyvariable),
                     c_int(0))
+            #self.mx.mxGetData.restype=POINTER(numpy_to_ctype(pyvariable))
+            self.mx.mxGetData.restype=POINTER(c_void_p)
             data_old = self.mx.mxGetData(mx)
-            if pyvariable.flags.f_contiguous:
-                tmp = pyvariable
-            else:
-                tmp = array(pyvariable,order='F')
-            self.mx.mxSetData(mx,tmp.ctypes.data)
-            self.mx.mxFree(data_old)
+            datastring = pyvariable.tostring('F')
+            n_datastring = len(datastring)
+            memmove(data_old,datastring,n_datastring)
+            
     
         self.engine.engPutVariable(self.ep,c_char_p(name),mx)

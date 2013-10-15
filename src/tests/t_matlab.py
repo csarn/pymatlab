@@ -1,19 +1,19 @@
 import unittest
 #import mocker
 
+
 import sys
-from pymatlab.matlab import MatlabSession
+import pymatlab
 import numpy
 from numpy import eye,arange,ones,array,ndarray
 from numpy.random import randn
 from numpy.ma.testutils import assert_equal,assert_almost_equal
 from StringIO import StringIO
-#from scipy.io import savemat,loadmat
 
 class MatlabTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = MatlabSession(command="matlab -nojvm -nodisplay")
+        self.session = pymatlab.session_factory()
         
     def runOK(self):
         command="A=ones(10);"
@@ -56,16 +56,18 @@ class MatlabTestCase(unittest.TestCase):
         assert_almost_equal(a,buf,4)
 
     def getput(self):
-        for type in [
+        for datatype in [
                 # Disbled tests
-                "int8",
+#                "int8",
                 "int16",
                 "int32",
                 "int64",
+#                'float16',
                 "f",
                 "d",
                 ]:
-            a = array([[1,2,3],[4,5,6]],dtype=type)
+            ar = randn(3,2,4)*10
+            a = ar.astype(datatype)  
             self.session.putvalue('A',a)
             b = self.session.getvalue('A')
             self.assertEqual(a.dtype,b.dtype)
@@ -96,7 +98,7 @@ class MatlabTestCase(unittest.TestCase):
         s.putvalue('A', a)
         s.run("B = A(1:9);")
         b = s.getvalue('B')
-        assert_equal(b.astype(int), numpy.array([range(1, 10)]).astype(int))
+        assert_equal(b.astype(int), numpy.array(range(1, 10)).astype(int))
 
 def test_suite():
     # Want to run them in a certain order...

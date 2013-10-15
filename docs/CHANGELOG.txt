@@ -2,6 +2,13 @@
 HISTORY
 =======
 
+2013-10-15 pymatlab 0.2.1
+-------------------------
+
+Added support for int16, int32, int64, float32 and float64 matrices of any
+rank. Squeezing of matrices is done automatically. Added a convenience 'session
+factory' to create a session and start matlab.
+
 2011-11-01 pymatlab 0.2.0
 -------------------------
 
