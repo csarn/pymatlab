@@ -2,20 +2,27 @@
 Python interface to MATLAB (pymatlab)
 =====================================
 
-This package lets python users interface and communicate with MATLAB from
-python. Pymatlab makes it easier for users to migrate from a large MATLAB
-codebase to python scripts - one step at a time - by using old MATLAB scripts.
+This package lets Python users interface and communicate with MATLAB from
+Python. Pymatlab makes it easier for users to integrate a project with a large
+MATLAB codebase into python scripts by using MATLAB scripts as a part of the
+python program.
+
+The basic functionality of this package is to send data from Python to MATLAB's
+workspace to be able to run Matlab function on the data. After processing you
+retrieve back data to python. This enables you to process data with Mathlab's
+built in functions, toolboxes or Matlab-scripts. It is also possible to use
+MATLAB's to generate plots or other graphics.
 
 The package uses Numpy's ndarrays and translates them into MATLAB's mxarrays
-using Numpy's c-api and Matlab mx library. The interface to MATLAB's workspace
-in done through MATLAB's engine library.
+using Python's ctypes and Matlab's mx library. The interface to MATLAB's
+workspace in done through MATLAB's engine library.
 
 Download
 --------
 
 Downloading is possible from PyPi_ and `SourceForge pymatlab files`__. Since
-pymatlab is hosted at SourceForge_ the latest development version is avalable
-from subversion.
+pymatlab is hosted at SourceForge_ the latest development version is available
+from git. There are different branches available this is the ctypes variant.
 
 .. _PyPi: http://pypi.python.org  
 .. _Files: http://sourceforge.net/projects/pymatlab/files/
@@ -26,151 +33,117 @@ __ Files_
 Installing
 ----------
 
-When installing from source distribution the include_dir and library_dir in
-setup.cfg needs to be altered. Sample configurations for different platforms
-are avalable in the package.
+Standard installation method using pip, easy_install or 'python setup.py
+install'.
 
 Preparing to use pymatlab
 -------------------------
 
-On UNIX like systems let the system administrator add the MATLAB library
-directories in ldconfig. If you don't have root access set the environmental
-variable LD_LIBRARY_PATH to correct path where pymatlab can find MATLAB's
-libraries (libmx and libeng). On my system with MATLAB installed in
-/opt/matlab I have put this line in my .bashrc:
+You need MATLAB_ from Mathworks properly installed on your local machine.
 
-    export LD_LIBRARY_PATH=/opt/matlab/bin/glnxa64:$LD_LIBRARY_PATH
+.. _MATLAB: http://www.mathworks.se/products/matlab/ 
 
-However, this is not necessary if you configure the rpath setting correctly 
-in the setup.cfg at build time.
+Linux:
 
-On Windows make sure the Matlab DLLs are in your "Path" environment variable. 
+C-shell has to be installed in order to make the Matlab connection work. Also
+the path to the matlab binary needs to be set.
+
+ $ sudo apt-get install csh
+ $ export PATH = /opt/MATLAB/R2013a/bin:$PATH
+
+Win:
+
+On Windows make sure the Matlab DLLs are in your "Path" environment variable.
+This version is not tested in Windows but should be possible to run with some
+debugging efforts.
 
 Requirements
 ------------
+
+- Python
+
+    Version 2.
  
 - Matlab 
     
-    Versions 2009a and 2010a verified. Presumably any version?
+    Versions 2009a,2010a,2013a tested. Presumably any version?
 
 - Numpy
 
-    Any version? tested on version 1.3.0.
+    Any version? tested on version 1.3.0. 
 
 Limitations
 -----------
 
-The current version lets you transfer double precision matrixes of any rank.
-Any other types will probably fail and give unpredictable results.
-
+The current version lets you transfer int16, int32, int64, float32 and float64
+matrices of any rank.  Any other types will probably fail or give unpredictable
+results.
 
 Using pymatlab
 --------------
 
 First import:
 
->>> from pymatlab import Session
+>>> import pymatlab
     
+Initialise the interpretor.
 
-Start a Session, an optional argument is the path the the matlab
-executable, if it is not your PATH.
+>>> session = pymatlab.session_factory()
 
->>> m = Session("/optional/path/to/matlab -options")
+Create an numpy-array to start the work.
 
-Here matlab "-options" default to "-nosplash -nodesktop" which allows MATLAB
-GUI windows to open and be interactive!
+>>> from numpy.random import randn
+>>> a = randn(20,10,30)
 
-((
-Trouble-shooting Note: If you get a "Can't start MATLAB engine"
-here, and you are running a Linux based system, please be sure that
-"csh" is install and in /bin/csh, i.e. on Ubuntu:
+Send the numpy array a to the MATLAB Workspace to the variable 'A'
+  
+>>> session.putvalue('A',a)
 
-$ sudo apt-get install csh
-# or have you sysadmin install csh
-$ which csh
-/bin/csh
-))
-
-Now try it out ... the Session instance exposes the matlab namespace, so
-we can call the matlab "plot" function:
-
->>> import numpy
->>> a = numpy.arange(0,10,0.1)
->>> m.plot(a,a**2,'r--')
->>> m.close()
->>> print m.help('plot')  # will print MATLAB docs on plot
-
-If you are in ipython
-$ ipython -pylab
-
-On can get help directly on objects in the MATLAB namespace
-In []: m.plot ?
-Type:             FuncWrap
-Base Class:       <class 'pymatlab.FuncWrap'>
-String Form:   <pymatlab.FuncWrap object at 0x2ed8190>
-Namespace:        Interactive
-File:             /usr/local/lib/python2.6/dist-packages/pymatlab-0.1.3-py2.6-linux-x86_64.egg/pymatlab/__init__.py
-Docstring:
-    PLOT   Linear plot.                                                                                                     
-    PLOT(X,Y) plots vector Y versus vector X. If X or Y is a matrix,
-    then the vector is plotted versus the rows or columns of the matrix,
-    whichever line up.  If X is a scalar and Y is a vector, disconnected
-    line objects are created and plotted as discrete points vertically at
-    X.
- 
-...
-
-Strings of matlab code can be sent to the Session with the run method:
-
->>> m.run("a = 0:10")
->>> print m.a
-[[  0.   1.   2.   3.   4.   5.   6.   7.   8.   9.  10.]]
->>> m.b = numpy.array([range(11.0)[::-1]],dtype=float)
->>> m.run("c = a+b")
->>> print m.c
-[[ 10.  10.  10.  10.  10.  10.  10.  10.  10.  10.  10.]]
-
-Sucessfull m.run commands return an empty string - if MATLAB 
-generates an error then a RuntimeError is raised with the 
-MATLAB error message 
+Do something in matlab in MATLAB with variable A. Sucessfull commands return
+an empty string - if MATLAB generates an error the returning string holds the
+error message
     
->>> m.run('B=2*A')
+>>> session.run('B=2*A')
 
+>>> session.run('C')
+Traceback (most recent call last):
     ...
-RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'A'.
- end.
+RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'C'.
+<BLANKLINE>
 
 A trick to make larger scripts more failsafe with regards to syntax errors.
 Send a script to a string variable and run it with eval().
 
->>> m.code = """D = a
+>>> mscript = """D = A
 ... for i=1:10
 ...    D = 2*D
 ... end
 ... """
->>> m.run('eval(code)')
+>>> session.putvalue('MSCRIPT',mscript)
+>>> session.run('eval(MSCRIPT)')
 
 To retrive the variable back to python:
 
->>> print m.D
->>> (m.D==m.A*(2**10)).all()
+>>> b = session.getvalue('B')
+>>> (2*a==b).all()
 True
 
-The MATLAB session is closed automatically on garbage collection of
-the m instance.
 
->>> quit()
-Closing MATLAB session.
+If you want to explicitly close the connection to the interpreter delete the
+instance. Normally Matlab will be close when the session variable runs out of
+scope.
 
+>>> del session
 
 Bugs, support and feature requests
 ----------------------------------
 
-All request for support like bugfixing and installation support or feature
-requests are directed to  the `SourceForge tracker for pymatlab
-<http://sourceforge.net/tracker/?group_id=307148>`_. 
+All bug reports, feature requests or support questions are directed
+to to pymatlab@molflow.com.
 
-Please  consider to support us in our efforts by `donating to pymatlab`__. Your donations will be used to buy hardware and software licenses to be able to continue to develop this package. 
+Please  consider to support us in our efforts by `donating to pymatlab`__. Your
+donations will be used to buy hardware and software licenses to be able to
+continue to develop this package. 
 
 .. _Donations: http://sourceforge.net/donate/index.php?group_id=307148
 
