@@ -2,10 +2,16 @@
 Python interface to MATLAB (pymatlab)
 =====================================
 
-This package lets python users interface and communicate with MATLAB from
-python. Pymatlab makes it easier for users to migrate from a large MATLAB
-prototyping codebase to python scripts - one step at a time - by using MATLAB
-scripts as a part of the python code.
+This package lets Python users interface and communicate with MATLAB from
+Python. Pymatlab makes it easier for users to integrate a project with a large
+MATLAB codebase into python scripts by using MATLAB scripts as a part of the
+python program.
+
+The basic functionality of this package is to send data from Python to MATLAB's
+workspace to be able to run Matlab function on the data. After processing you
+retrieve back data to python. This enables you to process data with Mathlab's
+built in functions, toolboxes or Matlab-scripts. It is also possible to use
+MATLAB's to generate plots or other graphics.
 
 The package uses Numpy's ndarrays and translates them into MATLAB's mxarrays
 using Python's ctypes and Matlab's mx library. The interface to MATLAB's
@@ -27,26 +33,29 @@ __ Files_
 Installing
 ----------
 
-Standard installation method using pip, easy_install or 'python setup.py install'.
+Standard installation method using pip, easy_install or 'python setup.py
+install'.
 
 Preparing to use pymatlab
 -------------------------
 
 You need MATLAB_ from Mathworks properly installed on your local machine.
 
-.. _MATLAB http://www.mathworks.se/products/matlab/ 
+.. _MATLAB: http://www.mathworks.se/products/matlab/ 
 
 Linux:
 
 C-shell has to be installed in order to make the Matlab connection work. Also
 the path to the matlab binary needs to be set.
 
-$ sudo apt-get install csh
-$ export PATH = /opt/MATLAB/R2013a/bin:$PATH
+ $ sudo apt-get install csh
+ $ export PATH = /opt/MATLAB/R2013a/bin:$PATH
 
 Win:
 
-On Windows make sure the Matlab DLLs are in your "Path" environment variable. 
+On Windows make sure the Matlab DLLs are in your "Path" environment variable.
+This version is not tested in Windows but should be possible to run with some
+debugging efforts.
 
 Requirements
 ------------
@@ -129,11 +138,12 @@ scope.
 Bugs, support and feature requests
 ----------------------------------
 
-All request for support like bugfixing and installation support or feature
-requests are directed to  the `SourceForge tracker for pymatlab
-<http://sourceforge.net/tracker/?group_id=307148>`_. 
+All bug reports, feature requests or support questions are directed
+to to pymatlab@molflow.com.
 
-Please  consider to support us in our efforts by `donating to pymatlab`__. Your donations will be used to buy hardware and software licenses to be able to continue to develop this package. 
+Please  consider to support us in our efforts by `donating to pymatlab`__. Your
+donations will be used to buy hardware and software licenses to be able to
+continue to develop this package. 
 
 .. _Donations: http://sourceforge.net/donate/index.php?group_id=307148
 
