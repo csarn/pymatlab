@@ -49,7 +49,7 @@ def remote_session_factory(hostname,remote_path):
         executable = os.path.realpath(path)
         basedir = os.path.dirname(os.path.dirname(executable))
         session = MatlabSession(
-            'basedir',
+            basedir,
             "ssh {host} '/bin/csh -c {full_path}'".format(
                     host=hostname,
                     full_path=remote_path)

@@ -17,6 +17,7 @@ The package uses Numpy's ndarrays and translates them into MATLAB's mxarrays
 using Python's ctypes and Matlab's mx library. The interface to MATLAB's
 workspace in done through MATLAB's engine library.
 
+
 Download
 --------
 
@@ -75,9 +76,11 @@ Requirements
 Limitations
 -----------
 
-The current version lets you transfer int16, int32, int64, float32 and float64
-matrices of any rank.  Any other types will probably fail or give unpredictable
-results.
+The current version lets you transfer arrays of any rank between Python and
+Matlab using the following datatypes: Single and double precision floatpoint
+numbers. Integer numbers of different bit lengths (8-64) unsigned or signed.
+Complex numbers (single or double precision). Logical arrays. Any other types
+will probably fail or give unpredictable results.
 
 Using pymatlab
 --------------
