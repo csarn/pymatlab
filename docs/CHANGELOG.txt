@@ -2,6 +2,17 @@
 HISTORY
 =======
 
+2013-10-24 pymatlab 0.2.3
+-------------------------
+
+Bugfix. Confirming the GPLv3 licence.
+
+2013-10-21 pymatlab 0.2.2
+-------------------------
+
+Now integers of bitlength 8-64 signed or unsigned, single and double precision
+floats, complex numbers (single,double) and logical arrays are supported.
+
 2013-10-15 pymatlab 0.2.1
 -------------------------
 
