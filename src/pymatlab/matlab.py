@@ -64,7 +64,7 @@ class MatlabSession(object):
                   'Could not start matlab using command "{}"'.format(command))
         self.buff_length = bufsize
         if self.buff_length!=0:
-	    self.buf = create_string_buffer(self.buff_length)
+            self.buf = create_string_buffer(self.buff_length)
             self.engine.engOutputBuffer(self.ep,self.buf,self.buff_length-1)
 
     def __del__(self):
@@ -79,7 +79,7 @@ class MatlabSession(object):
                 self.ep,c_char_p('pymatlaberrstring'))
         self.mx.mxArrayToString.restype=c_char_p
         error_string = self.mx.mxArrayToString(mxresult)
-        if error_string <> "":
+        if error_string != "":
             raise(RuntimeError('Error from Matlab: {0}'.format(
                 error_string)))
 
