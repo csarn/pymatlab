@@ -53,8 +53,16 @@ class MatlabSession(object):
             self.mx = CDLL(join(matlab_root,'bin','glnxa64','libmx.so'))
             self.ep = self.engine.engOpen(c_char_p(command))
         elif system=='Windows':
-            self.engine = CDLL(join(matlab_root,'bin','glnxa64','libeng.dll'))
-            self.mx = CDLL(join(matlab_root,'bin','glnxa64','libmx.dll'))
+            # determine wether we are using 32 or 64 bit build by testing sys.maxint
+            dll_dir = 'win64' if sys.maxint == 2**63-1 else 'win32'            
+            path = join(matlab_root,'bin',dll_dir)
+            # add the Matlab DLL path to the environment PATH variable
+            from os import environ
+            environ['PATH'] = path + ';' + environ['PATH']
+            
+            # load the DLLs
+            self.engine = CDLL(join(path,'libeng.dll'))
+            self.mx = CDLL(join(path,'libmx.dll'))
             self.ep = self.engine.engOpen(None)
         else:
             raise NotImplementedError(
