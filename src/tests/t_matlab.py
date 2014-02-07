@@ -173,7 +173,14 @@ class MatlabTestCase(unittest.TestCase):
         self.session.run('display(A)')
         buf = self.session.buf.value
         b = self.session.getvalue('A')
-        self.assertEqual(buf.split()[5:],a.split())
+        # bad construction the prompt shows on linux not on win
+        # pop elements to '=' shows up
+        result_string_list = buf.split()
+        result_string_list.reverse()
+        while result_string_list.pop()<>'=':
+            pass
+        result_string_list.reverse()
+        self.assertEqual(result_string_list,a.split())
         self.assertEqual(a,b)
 
     def check_order_mult(self):
