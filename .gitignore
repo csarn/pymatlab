@@ -7,4 +7,4 @@ eggs
 include
 lib
 src/pymatlab.egg-info
-
+.idea/
