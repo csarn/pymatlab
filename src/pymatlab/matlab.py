@@ -61,8 +61,17 @@ class MatlabSession(object):
             self.engine = CDLL(join(matlab_root, 'bin', 'glnxa64', 'libeng.so'))
             self.mx = CDLL(join(matlab_root, 'bin', 'glnxa64', 'libmx.so'))
         elif system == 'Windows':
-            self.engine = CDLL(join(matlab_root, 'bin', 'glnxa64', 'libeng.dll'))
-            self.mx = CDLL(join(matlab_root, 'bin', 'glnxa64', 'libmx.dll'))
+            # determine wether we are using 32 or 64 bit build by testing sys.maxsize
+            dll_dir = 'win64' if sys.maxsize > 2**32 else 'win32'            
+            path = join(matlab_root,'bin',dll_dir)
+            # add the Matlab DLL path to the environment PATH variable
+            from os import environ
+            environ['PATH'] = path + ';' + environ['PATH']
+            
+            # load the DLLs
+            self.engine = CDLL('libeng')
+            self.mx = CDLL('libmx')
+            self.ep = self.engine.engOpen(None)
         elif system == 'Darwin':
             self.engine = CDLL(join(matlab_root, 'bin', 'maci64', 'libeng.dylib'))
             self.mx = CDLL(join(matlab_root, 'bin', 'maci64', 'libmx.dylib'))

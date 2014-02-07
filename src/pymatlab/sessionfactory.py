@@ -48,7 +48,7 @@ def session_factory(options='',output_buffer_size=8096):
                 break
         executable = os.path.realpath(path)
         basedir = os.path.dirname(os.path.dirname(executable))
-        session = MatlabSession(path=basedir,bufsize=output_buffer_size)
+        session = MatlabSession(basedir,'',output_buffer_size)
 
     else:
         raise NotSupportedException(
