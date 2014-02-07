@@ -81,10 +81,10 @@ class MatlabSession(object):
         self.engine.engOutputBuffer.argtypes = [POINTER(Engine), c_char_p, c_int]
         self.engine.engOutputBuffer.restype = c_int
 
-        self.mx.mxGetNumberOfDimensions_700.restype = c_size_t
-        self.mx.mxGetNumberOfDimensions_700.argtypes = [POINTER(mxArray)]
-        self.mx.mxGetDimensions_700.restype = POINTER(c_int)
-        self.mx.mxGetDimensions_700.argtypes = [POINTER(mxArray)]
+        self.mx.mxGetNumberOfDimensions_730.restype = c_size_t
+        self.mx.mxGetNumberOfDimensions_730.argtypes = [POINTER(mxArray)]
+        self.mx.mxGetDimensions_730.restype = POINTER(c_int)
+        self.mx.mxGetDimensions_730.argtypes = [POINTER(mxArray)]
         self.mx.mxGetNumberOfElements.restype = c_size_t
         self.mx.mxGetNumberOfElements.argtypes = [POINTER(mxArray)]
         self.mx.mxGetElementSize.restype = c_size_t
@@ -104,9 +104,9 @@ class MatlabSession(object):
         self.mx.mxCreateString.restype = POINTER(mxArray)
         self.mx.mxCreateString.argtypes = [c_char_p]
 
-        self.mx.mxCreateNumericArray_700.restype = POINTER(mxArray)
-        self.mx.mxCreateLogicalArray_700.restype = POINTER(mxArray)
-        self.mx.mxCreateCharArray_700.restype = POINTER(mxArray)
+        self.mx.mxCreateNumericArray_730.restype = POINTER(mxArray)
+        self.mx.mxCreateLogicalArray_730.restype = POINTER(mxArray)
+        self.mx.mxCreateCharArray_730.restype = POINTER(mxArray)
         self.mx.mxGetLogicals.restype = POINTER(c_void_p)
         self.mx.mxGetData.restype = POINTER(c_void_p)
         self.mx.mxGetImagData.restype = POINTER(c_void_p)
@@ -138,8 +138,8 @@ class MatlabSession(object):
 
     def getvalue(self, variable):
         mx = self.engine.engGetVariable(self.ep, c_char_p(variable))
-        ndims = self.mx.mxGetNumberOfDimensions_700(mx)
-        dims = self.mx.mxGetDimensions_700(mx)
+        ndims = self.mx.mxGetNumberOfDimensions_730(mx)
+        dims = self.mx.mxGetDimensions_730(mx)
         numelems = self.mx.mxGetNumberOfElements(mx)
         elem_size = self.mx.mxGetElementSize(mx)
         class_name = self.mx.mxGetClassName(mx)
@@ -172,7 +172,7 @@ class MatlabSession(object):
             elif class_name == 'char':
                 length = numelems + 2
                 return_str = create_string_buffer(length)
-                self.mx.mxGetString_700(mx, return_str, length - 1);
+                self.mx.mxGetString_730(mx, return_str, length - 1);
                 return return_str.value
             elif class_name == 'function_handle':
                 raise NotImplementedError('{}-arrays are not implemented'.format(
@@ -209,7 +209,7 @@ class MatlabSession(object):
                 complex_flag = 0
                 if pyvariable.dtype.kind == 'c':
                     complex_flag = 1
-                mx = self.mx.mxCreateNumericArray_700(c_size_t(pyvariable.ndim),
+                mx = self.mx.mxCreateNumericArray_730(c_size_t(pyvariable.ndim),
                                                       dim,
                                                       np_to_mat(pyvariable),
                                                       c_int(complex_flag))
@@ -226,7 +226,7 @@ class MatlabSession(object):
             elif pyvariable.dtype.kind == 'b':
                 dim = pyvariable.ctypes.shape_as(c_size_t)
 
-                mx = self.mx.mxCreateLogicalArray_700(c_size_t(pyvariable.ndim),
+                mx = self.mx.mxCreateLogicalArray_730(c_size_t(pyvariable.ndim),
                                                       dim)
 
                 data_old = self.mx.mxGetData(mx)
@@ -236,7 +236,7 @@ class MatlabSession(object):
             elif pyvariable.dtype.kind == 'S':
                 raise NotImplementedError("String arrays are not supported.")
                 dim = pyvariable.ctypes.shape_as(c_size_t)
-                mx = self.mx.mxCreateCharArray_700(c_size_t(pyvariable.ndim),
+                mx = self.mx.mxCreateCharArray_730(c_size_t(pyvariable.ndim),
                                                    dim)
                 data_old = self.mx.mxGetData(mx)
                 datastring = pyvariable.tostring('F')
