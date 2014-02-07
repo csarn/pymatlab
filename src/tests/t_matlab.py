@@ -173,7 +173,7 @@ class MatlabTestCase(unittest.TestCase):
         self.session.run('display(A)')
         buf = self.session.buf.value
         b = self.session.getvalue('A')
-        self.assertEqual(buf.split()[5:],a.split())
+        self.assertEqual(buf.split()[2:],a.split())
         self.assertEqual(a,b)
 
     def check_order_mult(self):

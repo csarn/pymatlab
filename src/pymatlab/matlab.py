@@ -92,7 +92,7 @@ class MatlabSession(object):
 
         self.mx.mxGetNumberOfDimensions_730.restype = c_size_t
         self.mx.mxGetNumberOfDimensions_730.argtypes = [POINTER(mxArray)]
-        self.mx.mxGetDimensions_730.restype = POINTER(c_int)
+        self.mx.mxGetDimensions_730.restype = POINTER(c_size_t)
         self.mx.mxGetDimensions_730.argtypes = [POINTER(mxArray)]
         self.mx.mxGetNumberOfElements.restype = c_size_t
         self.mx.mxGetNumberOfElements.argtypes = [POINTER(mxArray)]

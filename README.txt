@@ -108,11 +108,11 @@ error message
     
 >>> session.run('B=2*A')
 
->>> session.run('C')
+>>> session.run('Cx')
 Traceback (most recent call last):
     ...
-RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'C'.
-<BLANKLINE>
+RuntimeError: Error from Matlab: Error: MATLAB:UndefinedFunction with message: Undefined function or variable 'Cx'.
+
 
 A trick to make larger scripts more failsafe with regards to syntax errors.
 Send a script to a string variable and run it with eval().
