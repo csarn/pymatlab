@@ -19,10 +19,10 @@ along with pymatlab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from ctypes import *
-from numpy import array,ndarray,dtype
+from numpy import array, ndarray, dtype
 from os.path import join
 import platform
-import sys,numpy
+import sys, numpy
 
 def numpy_to_ctype(np_variable):
     dtype = str(np_variable.dtype)

@@ -1,4 +1,4 @@
-import unittest,doctest
+import unittest, doctest
 from tests import t_matlab
 
 def test_suite():

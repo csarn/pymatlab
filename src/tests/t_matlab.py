@@ -1,6 +1,4 @@
 import unittest
-#import mocker
-
 
 import sys
 import pymatlab
@@ -8,7 +6,7 @@ import numpy
 from numpy import eye,arange,ones,array,ndarray
 from numpy.random import randn
 from numpy.ma.testutils import assert_equal,assert_almost_equal
-from StringIO import StringIO
+
 
 class MatlabTestCase(unittest.TestCase):
 
@@ -173,7 +171,8 @@ class MatlabTestCase(unittest.TestCase):
         self.session.run('display(A)')
         buf = self.session.buf.value
         b = self.session.getvalue('A')
-        self.assertEqual(buf.split()[5:],a.split())
+        n_words = len(a.split())
+        self.assertEqual(buf.split()[-n_words:],a.split())
         self.assertEqual(a,b)
 
     def check_order_mult(self):

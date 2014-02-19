@@ -19,15 +19,19 @@ along with pymatlab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from ctypes import *
-from numpy import array,ndarray,dtype
+from numpy import array, ndarray, dtype
 from os.path import join
 import platform
-import sys,numpy
+import numpy
 
 from pymatlab.typeconv import *
 
 class mxArray(Structure):
     pass
+
+
+def c_char_pp(s):
+    return c_char_p(s.encode('ascii'))
 
 
 wrap_script = '''
@@ -46,23 +50,21 @@ end
 '''
 
 class MatlabSession(object):
-    def __init__(self,matlab_root='',command='',bufsize=128):
+    def __init__(self, path='', command='', bufsize=128):
         system = platform.system()
         if system=='Linux' or system=='Darwin':
-            self.engine = CDLL(join(matlab_root,'bin','glnxa64','libeng.so'))
-            self.mx = CDLL(join(matlab_root,'bin','glnxa64','libmx.so'))
-            self.ep = self.engine.engOpen(c_char_p(command))
+            self.engine = CDLL(join(path, 'bin', 'glnxa64', 'libeng.so'))
+            self.mx = CDLL(join(path, 'bin', 'glnxa64', 'libmx.so'))
+            self.ep = self.engine.engOpen(c_char_pp(command))
         elif system=='Windows':
-            # determine wether we are using 32 or 64 bit build by testing sys.maxsize
-            dll_dir = 'win64' if sys.maxsize > 2**32 else 'win32'            
-            path = join(matlab_root,'bin',dll_dir)
+            print("Matlab DLLs are loaded from '{}'".format(path))
             # add the Matlab DLL path to the environment PATH variable
             from os import environ
             environ['PATH'] = path + ';' + environ['PATH']
             
             # load the DLLs
-            self.engine = CDLL('libeng')
-            self.mx = CDLL('libmx')
+            self.engine = CDLL(join(path,'libeng.dll'))
+            self.mx = CDLL(join(path, 'libmx.dll'))
             self.ep = self.engine.engOpen(None)
         else:
             raise NotImplementedError(
@@ -73,30 +75,30 @@ class MatlabSession(object):
         self.buff_length = bufsize
         if self.buff_length!=0:
             self.buf = create_string_buffer(self.buff_length)
-            self.engine.engOutputBuffer(self.ep,self.buf,self.buff_length-1)
+            self.engine.engOutputBuffer(self.ep, self.buf, self.buff_length-1)
 
     def __del__(self):
         self.engine.engClose(self.ep)
 
-    def run(self,matlab_statement):
+    def run(self, matlab_statement):
         #wrap statement to be able to catch errors
         real_statement = wrap_script.format(matlab_statement)
-        self.engine.engEvalString(self.ep,c_char_p(real_statement))
+        self.engine.engEvalString(self.ep, c_char_pp(real_statement))
         self.engine.engGetVariable.restype=POINTER(mxArray)
-        mxresult = self.engine.engGetVariable(
-                self.ep,c_char_p('pymatlaberrstring'))
+        mxresult = self.engine.engGetVariable(self.ep, c_char_pp('pymatlaberrstring'))
         self.mx.mxArrayToString.restype=c_char_p
         error_string = self.mx.mxArrayToString(mxresult)
-        if error_string != "":
-            raise(RuntimeError('Error from Matlab: {0}'.format(
-                error_string)))
+        if error_string:
+            error_string = error_string.decode('ascii') # bytes->string
+            raise RuntimeError('Error from Matlab: {0}'.format(error_string))
 
-    def getvalue(self,variable):
+    def getvalue(self, variable):
         self.engine.engGetVariable.restype=POINTER(mxArray)
-        mx = self.engine.engGetVariable(self.ep,c_char_p(variable))
+        mx = self.engine.engGetVariable(self.ep, c_char_pp(variable))
         self.mx.mxGetNumberOfDimensions.restype=c_size_t
         ndims = self.mx.mxGetNumberOfDimensions(mx)
-        self.mx.mxGetDimensions.restype=POINTER(c_size_t)
+        #self.mx.mxGetDimensions.restype=POINTER(c_size_t)
+        self.mx.mxGetDimensions.restype=POINTER(c_uint32)
         dims = self.mx.mxGetDimensions(mx)
         self.mx.mxGetNumberOfElements.restype=c_size_t
         numelems = self.mx.mxGetNumberOfElements(mx)
@@ -104,6 +106,7 @@ class MatlabSession(object):
         elem_size = self.mx.mxGetElementSize(mx)
         self.mx.mxGetClassName.restype=c_char_p
         class_name = self.mx.mxGetClassName(mx)
+        class_name = class_name.decode('ascii') # bytes -> string
         self.mx.mxIsNumeric.restype=c_bool
         is_numeric = self.mx.mxIsNumeric(mx)
         if is_numeric:
@@ -111,20 +114,20 @@ class MatlabSession(object):
             is_complex = self.mx.mxIsComplex(mx)
             returnsize = numelems*elem_size
             self.mx.mxGetData.restype=POINTER(c_void_p)
-            data =self.mx.mxGetData(mx)
-            realbuf =create_string_buffer(returnsize)
-            memmove(realbuf,data,returnsize)
+            data = self.mx.mxGetData(mx)
+            realbuf = create_string_buffer(returnsize)
+            memmove(realbuf, data, returnsize)
             datatype=class_name
             if is_complex:
                 self.mx.mxGetImagData.restype=POINTER(c_void_p)
                 data_imag =self.mx.mxGetImagData(mx)
-                imagbuf =create_string_buffer(returnsize)
-                memmove(imagbuf,data_imag,returnsize)
+                imagbuf = create_string_buffer(returnsize)
+                memmove(imagbuf, data_imag, returnsize)
                 #datatype = class_name.split()[1]
-                pyarray_imag = ndarray(buffer=imagbuf,shape=dims[:ndims], 
-                        dtype=dtype(datatype),order='F')
-            pyarray_real = ndarray(buffer=realbuf,shape=dims[:ndims], 
-                    dtype=dtype(datatype),order='F')
+                pyarray_imag = ndarray(buffer=imagbuf, shape=dims[:ndims], 
+                        dtype=dtype(datatype), order='F')
+            pyarray_real = ndarray(buffer=realbuf, shape=dims[:ndims], 
+                    dtype=dtype(datatype), order='F')
             if is_complex:
                 pyarray = pyarray_real + pyarray_imag*1j
             else:
@@ -146,10 +149,10 @@ class MatlabSession(object):
                 returnsize = numelems*elem_size
                 self.mx.mxGetData.restype=POINTER(c_void_p)
                 data =self.mx.mxGetData(mx)
-                buf =create_string_buffer(returnsize)
-                memmove(buf,data,returnsize)
-                pyarray = ndarray(buffer=buf,shape=dims[:ndims], 
-                        dtype=dtype('bool'),order='F')
+                buf = create_string_buffer(returnsize)
+                memmove(buf, data, returnsize)
+                pyarray = ndarray(buffer=buf, shape=dims[:ndims], 
+                        dtype=dtype('bool'), order='F')
                 return pyarray.squeeze()
             elif class_name=='struct':
                 raise NotImplementedError('{}-arrays are not implemented'.format(
@@ -161,17 +164,18 @@ class MatlabSession(object):
                 raise NotImplementedError('{}-arrays are not implemented'.format(
                     class_name))
 
-    def putvalue(self,name,pyvariable):
-        if type(pyvariable)==str:
+    def putvalue(self, name, pyvariable):
+        if isinstance(pyvariable, str):
             self.mx.mxCreateString.restype=POINTER(mxArray)
-            mx = self.mx.mxCreateString(c_char_p(pyvariable))
-        elif type(pyvariable)==dict:
+            mx = self.mx.mxCreateString(c_char_pp(pyvariable))
+        elif isinstance(pyvariable, dict):
             raise NotImplementedError('dictionaries are not supported')
         else:
-            if not type(pyvariable)==ndarray:
+            if not isinstance(pyvariable, ndarray):
                 pyvariable = array(pyvariable)
-            if pyvariable.dtype.kind in ['i','u','f','c']:
-                dim = pyvariable.ctypes.shape_as(c_size_t)
+            if pyvariable.dtype.kind in ['i', 'u', 'f', 'c']:
+                #dim = pyvariable.ctypes.shape_as(c_size_t)
+                dim = pyvariable.ctypes.shape_as(c_uint32)
                 self.mx.mxCreateNumericArray.restype=POINTER(mxArray)
                 complex_flag=0
                 if pyvariable.dtype.kind =='c':
@@ -184,16 +188,17 @@ class MatlabSession(object):
                 data_old = self.mx.mxGetData(mx)
                 datastring = pyvariable.real.tostring('F')
                 n_datastring = len(datastring)
-                memmove(data_old,datastring,n_datastring)
+                memmove(data_old, datastring, n_datastring)
                 if complex_flag:
                     self.mx.mxGetImagData.restype=POINTER(c_void_p)
                     data_old_imag = self.mx.mxGetImagData(mx)
                     datastring = pyvariable.imag.tostring('F')
                     n_datastring = len(datastring)
-                    memmove(data_old_imag,datastring,n_datastring)
+                    memmove(data_old_imag, datastring, n_datastring)
                 
             elif pyvariable.dtype.kind =='b':
-                dim = pyvariable.ctypes.shape_as(c_size_t)
+                #dim = pyvariable.ctypes.shape_as(c_size_t)
+                dim = pyvariable.ctypes.shape_as(c_uint32)
                 self.mx.mxCreateLogicalArray.restype=POINTER(mxArray)
                 mx = self.mx.mxCreateLogicalArray(c_size_t(pyvariable.ndim),
                         dim)
@@ -201,7 +206,7 @@ class MatlabSession(object):
                 data_old = self.mx.mxGetData(mx)
                 datastring = pyvariable.tostring('F')
                 n_datastring = len(datastring)
-                memmove(data_old,datastring,n_datastring)
+                memmove(data_old, datastring, n_datastring)
             elif pyvariable.dtype.kind =='S':
                 dim = pyvariable.ctypes.shape_as(c_size_t)
                 self.mx.mxCreateCharArray.restype=POINTER(mxArray)
@@ -211,9 +216,9 @@ class MatlabSession(object):
                 data_old = self.mx.mxGetData(mx)
                 datastring = pyvariable.tostring('F')
                 n_datastring = len(datastring)
-                memmove(data_old,datastring,n_datastring)
+                memmove(data_old, datastring, n_datastring)
             elif pyvariable.dtype.kind =='O':
                 raise NotImplementedError('Object arrays are not supported')
             else:
                 raise NotImplementedError('Type not supported')
-        self.engine.engPutVariable(self.ep,c_char_p(name),mx)
+        self.engine.engPutVariable(self.ep, c_char_pp(name), mx)
